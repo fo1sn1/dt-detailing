@@ -830,23 +830,57 @@
             ease: "power3.out"
         });
 
-        // Before/After Slider Logic for Multiple Sliders
+        // Before/After Slider Logic for Multiple Sliders (desktop + mobile pointer support)
         const sliderContainers = document.querySelectorAll('.slider-container');
-        
+
         sliderContainers.forEach(container => {
             const slider = container.querySelector('.slider');
             const afterImage = container.querySelector('.after-image');
             const sliderLine = container.querySelector('.slider-line');
 
-            if(slider && afterImage && sliderLine) {
-                slider.addEventListener('input', (e) => {
-                    const value = e.target.value;
-                    // Upraví ořez obrázku podle hodnoty slideru
-                    afterImage.style.clipPath = `polygon(${value}% 0, 100% 0, 100% 100%, ${value}% 100%)`;
-                    // Posunie vizuálnu čiaru
-                    sliderLine.style.left = `${value}%`;
-                });
+            const setValue = (v) => {
+                let value = Number(v);
+                if (isNaN(value)) value = 50;
+                value = Math.max(0, Math.min(100, value));
+                if (afterImage) afterImage.style.clipPath = `polygon(${value}% 0, 100% 0, 100% 100%, ${value}% 100%)`;
+                if (sliderLine) sliderLine.style.left = `${value}%`;
+                if (slider) slider.value = value;
+            };
+
+            if (slider) {
+                slider.addEventListener('input', (e) => setValue(e.target.value));
+                slider.addEventListener('change', (e) => setValue(e.target.value));
             }
+
+            // Pointer-based dragging (works for touch and mouse)
+            let isDragging = false;
+            const getValueFromEvent = (e) => {
+                const rect = container.getBoundingClientRect();
+                const x = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] && e.touches[0].clientX) || 0;
+                const rel = (x - rect.left) / rect.width;
+                return Math.round(rel * 100);
+            };
+
+            container.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                try { container.setPointerCapture(e.pointerId); } catch (err) {}
+                setValue(getValueFromEvent(e));
+            });
+
+            container.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                setValue(getValueFromEvent(e));
+            });
+
+            const stopDrag = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                try { container.releasePointerCapture && container.releasePointerCapture(e.pointerId); } catch (err) {}
+            };
+
+            container.addEventListener('pointerup', stopDrag);
+            container.addEventListener('pointercancel', stopDrag);
+            container.addEventListener('pointerleave', stopDrag);
         });
     </script>
 </body>
