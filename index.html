@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="cs" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DT Detailing Studio | Prémiová péče o váš vůz</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            DEFAULT: '#0066FF', // Modrá barva inspirovaná logem
+                            dark: '#004CDE',
+                            light: '#3385FF'
+                        },
+                        dark: {
+                            DEFAULT: '#0a0a0a',
+                            card: '#141414',
+                            border: '#2a2a2a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --cursor-x: 50vw;
+            --cursor-y: 50vh;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(0, 102, 255, 0.12), transparent 28%),
+                radial-gradient(circle at 80% 0%, rgba(51, 133, 255, 0.08), transparent 24%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 20%);
+            opacity: 0.7;
+            z-index: 0;
+        }
+
+        body > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        #cursor-glow {
+            position: fixed;
+            left: var(--cursor-x);
+            top: var(--cursor-y);
+            width: 180px;
+            height: 180px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            border-radius: 9999px;
+            background: radial-gradient(circle, rgba(0, 102, 255, 0.32) 0%, rgba(0, 102, 255, 0.18) 30%, rgba(0, 102, 255, 0.08) 48%, transparent 72%);
+            filter: blur(18px);
+            opacity: 0.75;
+            mix-blend-mode: screen;
+            transition: opacity 180ms ease;
+            z-index: 9998;
+        }
+
+        @media (hover: none), (pointer: coarse) {
+            #cursor-glow {
+                display: none;
+            }
+        }
+        
+        /* Custom scrollbar for aesthetic feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a2a; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0066FF; 
+        }
+
+        .clip-path-slant {
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+        }
+        
+        .glass-nav {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        a,
+        button,
+        img,
+        .slider-line,
+        .slider-container,
+        .glass-nav,
+        .gsap-service-card,
+        .gsap-review-card {
+            transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease, opacity 220ms ease, color 220ms ease, filter 220ms ease;
+        }
+
+        a:hover,
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        img {
+            will-change: transform;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand selection:text-white">
+    <div id="cursor-glow" aria-hidden="true"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 py-4 glass-nav">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex justify-between items-center">
+            <a href="#" class="flex items-center gap-3 gsap-nav-item">
+                <img src="images/logo.png" alt="DT Detailing Studio Logo" class="h-12 w-auto object-contain drop-shadow-lg rounded">
+            </a>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+                <a href="#o-nas" class="hover:text-brand transition-colors gsap-nav-item">O nás</a>
+                <a href="#sluzby" class="hover:text-brand transition-colors gsap-nav-item">Služby</a>
+                <a href="#ukazky" class="hover:text-brand transition-colors gsap-nav-item">Ukázky</a>
+                <a href="#recenze" class="hover:text-brand transition-colors gsap-nav-item">Recenze</a>
+                <a href="#kontakt" class="hover:text-brand transition-colors gsap-nav-item">Kontakt</a>
+                <a href="#kontakt" class="bg-brand hover:bg-brand-dark text-white px-6 py-2.5 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(0,102,255,0.3)] hover:shadow-[0_0_25px_rgba(0,102,255,0.5)] gsap-nav-item">
+                    Rezervovat
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="md:hidden text-white gsap-nav-item">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden clip-path-slant pb-20">
+        <!-- Background Image with Overlay -->
+        <div class="absolute inset-0 z-0">
+            <img src="images/hero-red-honda.png" alt="Vyladěná červená Honda" class="w-full h-full object-cover gsap-hero-bg scale-105">
+            <div class="absolute inset-0 bg-gradient-to-b from-dark/90 via-dark/80 to-dark"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 text-center flex flex-col items-center">
+            <a href="https://maps.google.com/?q=DT+detailing+studio+Český+Těšín" target="_blank" class="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 text-white px-4 py-2 rounded-full text-sm mb-6 gsap-hero-el hover:bg-white/20 transition-colors">
+                <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+                <span class="font-medium">5.0 (25 recenzí na Google)</span>
+            </a>
+            <span class="text-brand font-semibold tracking-widest uppercase text-sm mb-4 block gsap-hero-el">Dokonalost v každém detailu</span>
+            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight gsap-hero-el">
+                Vraťte svému vozu <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-light to-brand">původní lesk</span>
+            </h1>
+            <p class="text-gray-400 max-w-2xl text-lg md:text-xl mb-10 gsap-hero-el">
+                Prémiová péče o exteriér i interiér. Profesionální leštění laku, aplikace keramických ochran a detailní čištění.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 gsap-hero-el">
+                <a href="#sluzby" class="bg-brand hover:bg-brand-dark text-white px-8 py-4 rounded-full font-medium transition-all duration-300 shadow-[0_0_20px_rgba(0,102,255,0.4)] flex items-center justify-center gap-2 group">
+                    Naše služby
+                    <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                </a>
+                <a href="#kontakt" class="bg-transparent border border-gray-600 hover:border-white text-white px-8 py-4 rounded-full font-medium transition-all duration-300 flex items-center justify-center">
+                    Kontaktujte nás
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- About / Feature Section -->
+    <section id="o-nas" class="py-24 relative overflow-hidden">
+        <!-- Decor -->
+        <div class="absolute top-0 right-0 w-96 h-96 bg-brand/10 blur-[100px] rounded-full pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-brand/5 blur-[100px] rounded-full pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 grid lg:grid-cols-2 gap-16 items-center">
+            <div class="gsap-image-reveal relative rounded-2xl overflow-hidden group">
+                <img src="images/skoda.png" alt="Práce DT Detailing Studio" class="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105">
+                <div class="absolute inset-0 border-2 border-brand/30 rounded-2xl z-10 m-4 pointer-events-none"></div>
+            </div>
+            
+            <div>
+                <span class="text-brand font-semibold tracking-widest uppercase text-sm mb-4 block gsap-fade-up">Proč my?</span>
+                <h2 class="text-3xl md:text-5xl font-bold mb-6 leading-tight gsap-fade-up">Kvalita na prvním místě</h2>
+                <p class="text-gray-400 mb-8 text-lg gsap-fade-up">
+                    V DT Detailing Studio nepřistupujeme k autům jako na běžné myčce. Každý vůz vyžaduje individuální péči. Věnujeme pozornost i těm nejmenším detailům, abychom dosáhli výsledku, který vám vyrazí dech.
+                </p>
+                
+                <ul class="space-y-4 gsap-fade-up">
+                    <li class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-brand/20 flex items-center justify-center text-brand">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-gray-200">Individuální přístup ke každému vozu</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-brand/20 flex items-center justify-center text-brand">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-gray-200">Použití špičkové autokosmetiky a nářadí</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-brand/20 flex items-center justify-center text-brand">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-gray-200">Mnohaleté zkušenosti v oboru</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="sluzby" class="py-16 md:py-20 relative z-10">
+        <div class="max-w-6xl mx-auto px-5 lg:px-6">
+            <div class="text-center mb-10 gsap-fade-up">
+                <h2 class="text-2xl md:text-4xl font-bold mb-3">Co nabízíme</h2>
+                <div class="w-20 h-1 bg-brand mx-auto rounded-full mb-4"></div>
+                <p class="text-gray-400 max-w-xl mx-auto text-sm md:text-base">Poskytujeme komplexní služby pro váš automobil. Používáme pouze ověřenou a prémiovou autokosmetiku pro maximální výsledek.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <!-- Service 1 -->
+                <div class="bg-dark-card border border-dark-border p-6 rounded-2xl hover:border-brand/50 transition-colors duration-300 group gsap-service-card lg:col-span-4">
+                    <div class="w-12 h-12 bg-brand/10 text-brand rounded-xl flex items-center justify-center mb-4 group-hover:bg-brand group-hover:text-white transition-colors duration-300">
+                        <i data-lucide="sofa" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-semibold mb-2">Čištění interiéru</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-4">Vyberte si úroveň péče podle stavu vozu a požadovaného výsledku.</p>
+
+                    <div class="grid gap-4 lg:grid-cols-2">
+                        <div class="rounded-2xl border border-brand/25 bg-[#111111] p-4 md:p-5 shadow-[0_0_30px_rgba(0,0,0,0.2)]">
+                            <div class="mb-3">
+                                <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand mb-3">
+                                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                </div>
+                                <h4 class="text-xl md:text-2xl font-semibold text-white">Interiér Classic</h4>
+                                <div class="text-2xl md:text-3xl font-bold text-brand mt-1">1 190 Kč</div>
+                            </div>
+                            <ul class="space-y-2 text-xs md:text-sm text-gray-300 leading-relaxed">
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Kompletní vysávání</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Vyfoukání nečistot ze spár</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Čištění plastů a palubní desky</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Čištění volantu</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Leštění skel a displejů</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Čištění koberečků a pedálů</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Provonění vozu</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="rounded-2xl border border-brand/30 bg-[#111111] p-4 md:p-5 shadow-[0_0_30px_rgba(0,0,0,0.2)]">
+                            <div class="mb-3">
+                                <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand mb-3">
+                                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                </div>
+                                <h4 class="text-xl md:text-2xl font-semibold text-white">Interiér Premium</h4>
+                                <div class="text-2xl md:text-3xl font-bold text-brand mt-1">1 990 Kč</div>
+                            </div>
+                            <ul class="space-y-2 text-xs md:text-sm text-gray-300 leading-relaxed">
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Vše z balíčku Interiér Classic</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Tepování sedaček a kufru</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Čištění a výživa kůže</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Hloubkové parní čištění</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Čištění madel a dveří</span></li>
+                                <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Dezinfekce větracích cest</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:col-span-4">
+                    <!-- Service 2 -->
+                    <div class="rounded-2xl border border-brand/25 bg-[#111111] p-4 md:p-5 shadow-[0_0_30px_rgba(0,0,0,0.2)] hover:border-brand/50 transition-colors duration-300 gsap-service-card">
+                        <div class="mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand mb-3">
+                                <i data-lucide="droplets" class="w-4 h-4"></i>
+                            </div>
+                            <h4 class="text-xl md:text-2xl font-semibold text-white">Detailní mytí</h4>
+                            <div class="text-2xl md:text-3xl font-bold text-brand mt-1">590 Kč</div>
+                        </div>
+                        <ul class="space-y-2 text-xs md:text-sm text-gray-300 leading-relaxed">
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Šetrné ruční mytí karoserie</span></li>
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Čištění disků a podběhů</span></li>
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Metoda dvou kbelíků proti poškrábání</span></li>
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Sušení a kontrola laku</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Service 3 -->
+                    <div class="rounded-2xl border border-brand/25 bg-[#111111] p-4 md:p-5 shadow-[0_0_30px_rgba(0,0,0,0.2)] hover:border-brand/50 transition-colors duration-300 gsap-service-card">
+                        <div class="mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand mb-3">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            </div>
+                            <h4 class="text-xl md:text-2xl font-semibold text-white">Leštění laku</h4>
+                            <div class="text-2xl md:text-3xl font-bold text-brand mt-1">od 2 490 Kč</div>
+                        </div>
+                        <ul class="space-y-2 text-xs md:text-sm text-gray-300 leading-relaxed">
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Inspekce a maskování citlivých míst</span></li>
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Jedno/vícekrokové strojní leštění</span></li>
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Odstranění škrábanců a hologramů</span></li>
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Konečná ochrana a lesk</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Service 4 -->
+                    <div class="rounded-2xl border border-brand/25 bg-[#111111] p-4 md:p-5 shadow-[0_0_30px_rgba(0,0,0,0.2)] hover:border-brand/50 transition-colors duration-300 gsap-service-card">
+                        <div class="mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand mb-3">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            </div>
+                            <h4 class="text-xl md:text-2xl font-semibold text-white">Keramická ochrana</h4>
+                            <div class="text-2xl md:text-3xl font-bold text-brand mt-1">4 990 Kč</div>
+                        </div>
+                        <ul class="space-y-2 text-xs md:text-sm text-gray-300 leading-relaxed">
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Dezinkontaminace a příprava povrchu</span></li>
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Aplikace keramického povlaku (1–3 vrstvy)</span></li>
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Vytvrzení a finální kontrola</span></li>
+                            <li class="flex gap-2"><span class="text-brand mt-0.5">✓</span><span>Dlouhodobá ochrana a hydrofobita</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Before & After Section -->
+    <section id="ukazky" class="py-24 relative bg-dark">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="text-center mb-16 gsap-fade-up">
+                <h2 class="text-3xl md:text-5xl font-bold mb-4">Rozdíl, který uvidíte</h2>
+                <div class="w-24 h-1 bg-brand mx-auto rounded-full mb-6"></div>
+                <p class="text-gray-400 max-w-2xl mx-auto">Podívejte se na ukázky naší práce před zásahem a po něm. Pomocí posuvníku můžete porovnat výsledek.</p>
+            </div>
+
+            
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                
+                <!-- 1. Příklad (Světlomety) -->
+                <div class="slider-container relative w-full aspect-[4/3] rounded-2xl overflow-hidden gsap-fade-up group shadow-[0_0_30px_rgba(0,102,255,0.15)] border border-dark-border">
+                    <img src="images/before-headlights.png" alt="Před renovací" class="absolute inset-0 w-full h-full object-cover">
+                    <img src="images/after-headlights.png" alt="Po renovaci" class="after-image absolute inset-0 w-full h-full object-cover" style="clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);">
+                    <input type="range" min="0" max="100" value="50" class="slider absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20">
+                    <div class="slider-line absolute top-0 bottom-0 left-1/2 w-1 bg-brand z-10 pointer-events-none transform -translate-x-1/2 shadow-[0_0_15px_rgba(0,0,0,0.8)] transition-transform duration-75">
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-brand border-2 border-brand">
+                            <i data-lucide="chevrons-left-right" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm z-10 pointer-events-none border border-white/10 uppercase tracking-wider">Před</div>
+                    <div class="absolute top-4 right-4 bg-brand text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm z-10 pointer-events-none border border-white/20 uppercase tracking-wider shadow-[0_0_10px_rgba(0,102,255,0.5)]">Po</div>
+                    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 pointer-events-none z-10">
+                        <p class="text-white font-medium text-sm">Renovace světlometů</p>
+                    </div>
+                </div>
+
+                <!-- 2. Příklad (Čištění interiéru) -->
+                <div class="slider-container relative w-full aspect-[4/3] rounded-2xl overflow-hidden gsap-fade-up group shadow-[0_0_30px_rgba(0,102,255,0.15)] border border-dark-border" style="transition-delay: 0.1s;">
+                    <img src="images/before-interior.png" alt="Před" class="absolute inset-0 w-full h-full object-cover">
+                    <img src="images/after-interior.png" alt="Po" class="after-image absolute inset-0 w-full h-full object-cover" style="clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);">
+                    <input type="range" min="0" max="100" value="50" class="slider absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20">
+                    <div class="slider-line absolute top-0 bottom-0 left-1/2 w-1 bg-brand z-10 pointer-events-none transform -translate-x-1/2 shadow-[0_0_15px_rgba(0,0,0,0.8)] transition-transform duration-75">
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-brand border-2 border-brand">
+                            <i data-lucide="chevrons-left-right" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm z-10 pointer-events-none border border-white/10 uppercase tracking-wider">Před</div>
+                    <div class="absolute top-4 right-4 bg-brand text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm z-10 pointer-events-none border border-white/20 uppercase tracking-wider shadow-[0_0_10px_rgba(0,102,255,0.5)]">Po</div>
+                    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 pointer-events-none z-10">
+                        <p class="text-white font-medium text-sm">Čištění interiéru</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Fotky vyčištěných vozů (umístěno pod Před / Po) -->
+            <div class="max-w-7xl mx-auto px-6 lg:px-8 mt-12 gsap-fade-up">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-semibold text-white">Fotky vyčištěných vozů</h3>
+                    <p class="text-gray-400 text-sm">Ukázka našich dokončených prací.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="rounded-2xl overflow-hidden border border-dark-border bg-dark-card/20 shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
+                        <img src="images/after-headlights.png" alt="Čisté auto 1" class="w-full h-48 object-cover">
+                    </div>
+
+                    <div class="rounded-2xl overflow-hidden border border-dark-border bg-dark-card/20 shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
+                        <img src="images/after-interior.png" alt="Čisté auto 2" class="w-full h-48 object-cover">
+                    </div>
+
+                    <div class="rounded-2xl overflow-hidden border border-dark-border bg-dark-card/20 shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
+                        <img src="images/skoda.png" alt="Čisté auto 3" class="w-full h-48 object-cover">
+                    </div>
+
+                    <div class="rounded-2xl overflow-hidden border border-dark-border bg-dark-card/20 shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
+                        <img src="images/hero-red-honda.png" alt="Čisté auto 4" class="w-full h-48 object-cover">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <section id="recenze" class="py-24 relative bg-dark-card/30">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="text-center mb-16 gsap-fade-up">
+                <h2 class="text-3xl md:text-5xl font-bold mb-4">Co o nás říkají klienti</h2>
+                <div class="w-24 h-1 bg-brand mx-auto rounded-full mb-6"></div>
+                <p class="text-gray-400 max-w-2xl mx-auto">Záleží nám na perfektním výsledku. Přečtěte si hodnocení našich spokojených zákazníků z Google Map.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Review 1 -->
+                <div class="bg-dark border border-dark-border p-8 rounded-2xl gsap-review-card hover:border-brand/30 transition-colors flex flex-col">
+                    <div class="flex items-center gap-1 text-yellow-400 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <p class="text-gray-300 mb-6 text-sm leading-relaxed italic">"Jsem velmi spokojený se službou, světlomety mi vyčistili naprosto skvěle! Vypadají jako nové, krásně září a auto díky tomu působí mnohem nověji. Určitě doporučuji všem, kdo chtějí mít světla zase jak nové."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="w-10 h-10 rounded-full bg-blue-900 flex items-center justify-center text-white font-bold">M</div>
+                        <div>
+                            <div class="font-semibold text-sm">Milan Fekec</div>
+                            <div class="text-xs text-gray-500">Před 7 měsíci</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="bg-dark border border-dark-border p-8 rounded-2xl gsap-review-card hover:border-brand/30 transition-colors flex flex-col">
+                    <div class="flex items-center gap-1 text-yellow-400 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <p class="text-gray-300 mb-6 text-sm leading-relaxed italic">"Obracel jsem se na DT detailing studio kvůli kompletnímu čištění interiéru svého sedmimístného minivanu. Práce byla provedena prostě vynikajícím způsobem! Auto je velké... děti často nechávají skvrny, ale teď je vše čisté."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="w-10 h-10 rounded-full bg-green-900 flex items-center justify-center text-white font-bold">С</div>
+                        <div>
+                            <div class="font-semibold text-sm">Сергей Грешило</div>
+                            <div class="text-xs text-gray-500">Před 5 měsíci</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="bg-dark border border-dark-border p-8 rounded-2xl gsap-review-card hover:border-brand/30 transition-colors flex flex-col">
+                    <div class="flex items-center gap-1 text-yellow-400 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <p class="text-gray-300 mb-6 text-sm leading-relaxed italic">"Nedávno jsem si nechala udělat čištění interiéru svého auta a jsem naprosto nadšená! Interiér vypadá jako nový – všechna skvrny zmizely, čalounění je svěží, plasty se lesknou a vůně v autě je teď úžasná."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center text-white font-bold">Т</div>
+                        <div>
+                            <div class="font-semibold text-sm">Таня Рудакова</div>
+                            <div class="text-xs text-gray-500">Před 6 měsíci</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12 gsap-fade-up">
+                 <a href="https://maps.google.com/?q=DT+detailing+studio+Český+Těšín" target="_blank" class="inline-flex items-center gap-2 text-brand hover:text-white transition-colors text-sm font-medium">
+                    Zobrazit všechny recenze na Google <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                 </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact CTA Section -->
+    <section id="kontakt" class="py-24">
+        <div class="max-w-5xl mx-auto px-6 lg:px-8">
+            <div class="bg-gradient-to-br from-dark-card to-dark border border-dark-border rounded-3xl p-8 md:p-16 relative overflow-hidden gsap-fade-up">
+                <!-- Abstract BG inside card -->
+                <div class="absolute -top-24 -right-24 w-48 h-48 bg-brand/20 blur-[60px] rounded-full"></div>
+                <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-brand/10 blur-[60px] rounded-full"></div>
+                
+                <div class="relative z-10">
+                    <div class="text-center">
+                        <h2 class="text-3xl md:text-5xl font-bold mb-6">Připraveni na proměnu?</h2>
+                        <p class="text-gray-400 max-w-2xl mx-auto mb-12 text-lg">
+                            Kontaktujte nás pro nezávaznou konzultaci a cenovou nabídku. Zarezervujte si termín a my se postaráme o zbytek.
+                        </p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <!-- Telefon -->
+                        <a href="tel:+420799019440" class="flex flex-col items-center text-center group">
+                            <div class="w-16 h-16 rounded-full bg-dark flex items-center justify-center border border-dark-border shadow-[0_0_15px_rgba(0,102,255,0.1)] group-hover:border-brand transition-colors mb-4">
+                                <i data-lucide="phone" class="w-6 h-6 text-brand"></i>
+                            </div>
+                            <div class="font-semibold text-white mb-1 group-hover:text-brand transition-colors">Zavolejte nám</div>
+                            <div class="text-gray-400 text-sm">799 019 440</div>
+                        </a>
+                        
+                        <!-- Adresa -->
+                        <a href="https://maps.google.com/?q=Mlýnská+942/13,+737+01+Český+Těšín" target="_blank" class="flex flex-col items-center text-center group">
+                            <div class="w-16 h-16 rounded-full bg-dark flex items-center justify-center border border-dark-border shadow-[0_0_15px_rgba(0,102,255,0.1)] group-hover:border-brand transition-colors mb-4">
+                                <i data-lucide="map-pin" class="w-6 h-6 text-brand"></i>
+                            </div>
+                            <div class="font-semibold text-white mb-1 group-hover:text-brand transition-colors">Kde nás najdete</div>
+                            <div class="text-gray-400 text-sm">Mlýnská 942/13<br>737 01 Český Těšín</div>
+                        </a>
+
+                        <!-- Sociální sítě -->
+                        <a href="https://instagram.com/dt.studi0" target="_blank" class="flex flex-col items-center text-center group">
+                            <div class="w-16 h-16 rounded-full bg-dark flex items-center justify-center border border-dark-border shadow-[0_0_15px_rgba(0,102,255,0.1)] group-hover:border-brand transition-colors mb-4 overflow-hidden">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="w-7 h-7 text-brand">
+                                    <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2"></rect>
+                                    <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"></circle>
+                                    <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"></circle>
+                                </svg>
+                            </div>
+                            <div class="font-semibold text-white mb-1 group-hover:text-brand transition-colors">Sociální sítě</div>
+                            <div class="text-gray-400 text-sm flex items-center justify-center gap-1">
+                                <span class="text-brand">@</span>
+                                <span>dt.studi0</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="rounded-2xl border border-dark-border overflow-hidden bg-dark-card/50 shadow-[0_0_30px_rgba(0,102,255,0.08)]">
+                        <div class="flex items-center justify-between gap-4 px-5 py-4 border-b border-dark-border">
+                            <div>
+                                <h3 class="text-white font-semibold text-lg">Kde nás najdete</h3>
+                                <p class="text-gray-400 text-sm">Mlýnská 942/13, 737 01 Český Těšín</p>
+                            </div>
+                            <a href="https://maps.google.com/?q=Mlýnská+942/13,+737+01+Český+Těšín" target="_blank" class="text-sm font-medium text-brand hover:text-white transition-colors">
+                                Otevřít v Mapách
+                            </a>
+                        </div>
+                        <div class="relative w-full h-[280px] md:h-[360px]">
+                            <iframe
+                                title="Mapa DT Detailing Studio"
+                                src="https://www.google.com/maps?q=Mlýnská+942/13,+737+01+Český+Těšín&output=embed"
+                                class="absolute inset-0 w-full h-full"
+                                style="border:0;"
+                                allowfullscreen=""
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-dark-border bg-gradient-to-b from-dark to-black pt-16 pb-10 relative overflow-hidden">
+        <div class="absolute -top-24 left-0 w-72 h-72 bg-brand/10 blur-[100px] rounded-full pointer-events-none"></div>
+        <div class="absolute -bottom-24 right-0 w-72 h-72 bg-brand/5 blur-[100px] rounded-full pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12">
+                <div class="space-y-4">
+                    <img src="images/logo.png" alt="DT Detailing Studio" class="h-12 w-auto opacity-90">
+                    <p class="text-gray-400 text-sm leading-relaxed max-w-sm">
+                        Prémiový detailing, renovace laku a péče o interiér. Dáváme vozu vzhled, který odpovídá jeho skutečné hodnotě.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-white font-semibold mb-4 uppercase tracking-wider text-sm">Služby</h3>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="#sluzby" class="hover:text-brand transition-colors">Detailní mytí</a></li>
+                        <li><a href="#sluzby" class="hover:text-brand transition-colors">Leštění laku</a></li>
+                        <li><a href="#sluzby" class="hover:text-brand transition-colors">Keramická ochrana</a></li>
+                        <li><a href="#sluzby" class="hover:text-brand transition-colors">Čištění interiéru</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-white font-semibold mb-4 uppercase tracking-wider text-sm">Kontakt</h3>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="tel:+420799019440" class="hover:text-brand transition-colors">+420 799 019 440</a></li>
+                        <li><a href="https://maps.google.com/?q=Mlýnská+942/13,+737+01+Český+Těšín" target="_blank" class="hover:text-brand transition-colors">Mlýnská 942/13, Český Těšín</a></li>
+                        <li><a href="https://instagram.com/dt.studi0" target="_blank" class="hover:text-brand transition-colors">@dt.studi0</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-white font-semibold mb-4 uppercase tracking-wider text-sm">Otevřeno</h3>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li>Pondělí - Pátek: dle domluvy</li>
+                        <li>Sobota: dle domluvy</li>
+                        <li>Neděle: zavřeno</li>
+                    </ul>
+                    <div class="mt-6 flex gap-3">
+                        <a href="tel:+420799019440" class="w-10 h-10 rounded-full bg-dark-card border border-dark-border flex items-center justify-center text-gray-400 hover:text-brand hover:border-brand transition-colors">
+                            <i data-lucide="phone" class="w-5 h-5"></i>
+                        </a>
+                        <a href="https://maps.google.com/?q=DT+detailing+studio+Český+Těšín" target="_blank" class="w-10 h-10 rounded-full bg-dark-card border border-dark-border flex items-center justify-center text-gray-400 hover:text-brand hover:border-brand transition-colors">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-dark-border pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-500 text-sm text-center md:text-left">
+                    &copy; <span id="year"></span> DT Detailing Studio. Všechna práva vyhrazena.
+                </p>
+
+                <div class="flex items-center gap-3 text-xs text-gray-500">
+                    <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10">Premium detailing</span>
+                    <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10">Český Těšín</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Set current year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Cursor glow follows the pointer on desktop
+        const cursorGlow = document.getElementById('cursor-glow');
+        let cursorFrame = null;
+        let cursorTargetX = window.innerWidth / 2;
+        let cursorTargetY = window.innerHeight / 2;
+        let cursorCurrentX = cursorTargetX;
+        let cursorCurrentY = cursorTargetY;
+
+        const animateCursorGlow = () => {
+            cursorCurrentX += (cursorTargetX - cursorCurrentX) * 0.12;
+            cursorCurrentY += (cursorTargetY - cursorCurrentY) * 0.12;
+            document.documentElement.style.setProperty('--cursor-x', `${cursorCurrentX}px`);
+            document.documentElement.style.setProperty('--cursor-y', `${cursorCurrentY}px`);
+            cursorFrame = requestAnimationFrame(animateCursorGlow);
+        };
+
+        if (cursorGlow && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            window.addEventListener('pointermove', (event) => {
+                cursorTargetX = event.clientX;
+                cursorTargetY = event.clientY;
+                cursorGlow.style.opacity = '0.85';
+            });
+
+            window.addEventListener('pointerleave', () => {
+                cursorGlow.style.opacity = '0';
+            });
+
+            window.addEventListener('pointerenter', () => {
+                cursorGlow.style.opacity = '0.85';
+            });
+
+            animateCursorGlow();
+        } else if (cursorGlow) {
+            cursorGlow.remove();
+        }
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('shadow-lg');
+            } else {
+                navbar.classList.remove('shadow-lg');
+            }
+        });
+
+        // Hero Timeline
+        const heroTl = gsap.timeline();
+        
+        heroTl.fromTo(".gsap-hero-bg", 
+            { scale: 1.2, opacity: 0 },
+            { scale: 1, opacity: 1, duration: 1.5, ease: "power3.out" }
+        )
+        .fromTo(".gsap-nav-item",
+            { y: -20, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power2.out" },
+            "-=1"
+        )
+        .fromTo(".gsap-hero-el",
+            { y: 40, opacity: 0 },
+            { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: "power3.out" },
+            "-=0.8"
+        );
+
+        // Parallax effect on hero background on scroll
+        gsap.to(".gsap-hero-bg", {
+            yPercent: 30,
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".clip-path-slant",
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+
+        // Services Stagger Animation
+        gsap.from(".gsap-service-card", {
+            scrollTrigger: {
+                trigger: "#sluzby",
+                start: "top 80%",
+            },
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power2.out"
+        });
+
+        // Reviews Stagger Animation
+        gsap.from(".gsap-review-card", {
+            scrollTrigger: {
+                trigger: "#recenze",
+                start: "top 80%",
+            },
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power2.out"
+        });
+
+        // General Fade Up Elements
+        gsap.utils.toArray('.gsap-fade-up').forEach(element => {
+            gsap.from(element, {
+                scrollTrigger: {
+                    trigger: element,
+                    start: "top 85%",
+                },
+                y: 40,
+                opacity: 0,
+                duration: 0.8,
+                ease: "power2.out"
+            });
+        });
+
+        // Image Reveal effect
+        gsap.from(".gsap-image-reveal img", {
+            scrollTrigger: {
+                trigger: ".gsap-image-reveal",
+                start: "top 80%",
+            },
+            scale: 1.2,
+            opacity: 0,
+            duration: 1.2,
+            ease: "power3.out"
+        });
+
+        // Before/After Slider Logic for Multiple Sliders
+        const sliderContainers = document.querySelectorAll('.slider-container');
+        
+        sliderContainers.forEach(container => {
+            const slider = container.querySelector('.slider');
+            const afterImage = container.querySelector('.after-image');
+            const sliderLine = container.querySelector('.slider-line');
+
+            if(slider && afterImage && sliderLine) {
+                slider.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    // Upraví ořez obrázku podle hodnoty slideru
+                    afterImage.style.clipPath = `polygon(${value}% 0, 100% 0, 100% 100%, ${value}% 100%)`;
+                    // Posunie vizuálnu čiaru
+                    sliderLine.style.left = `${value}%`;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
