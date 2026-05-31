@@ -175,11 +175,23 @@
             </div>
 
             <!-- Mobile Menu Button -->
-            <button class="md:hidden text-white gsap-nav-item">
+            <button id="mobile-menu-button" aria-expanded="false" aria-controls="mobile-menu" class="md:hidden text-white gsap-nav-item">
                 <i data-lucide="menu"></i>
             </button>
         </div>
     </nav>
+
+    <!-- Mobile menu (hidden on md+) -->
+    <div id="mobile-menu" class="md:hidden hidden bg-dark-card/90 backdrop-blur-sm border-t border-dark-border">
+        <div class="px-6 py-4 space-y-3">
+            <a href="#o-nas" class="block text-white font-medium">O nás</a>
+            <a href="#sluzby" class="block text-white font-medium">Služby</a>
+            <a href="#ukazky" class="block text-white font-medium">Ukázky</a>
+            <a href="#recenze" class="block text-white font-medium">Recenze</a>
+            <a href="#kontakt" class="block text-white font-medium">Kontakt</a>
+            <a href="#kontakt" class="block mt-2 bg-brand text-white text-center px-4 py-2 rounded-full">Rezervovat</a>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden clip-path-slant pb-20">
@@ -386,7 +398,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                 
                 <!-- 1. Příklad (Světlomety) -->
-                <div class="slider-container relative w-full aspect-[4/3] rounded-2xl overflow-hidden gsap-fade-up group shadow-[0_0_30px_rgba(0,102,255,0.15)] border border-dark-border">
+                <div class="slider-container relative w-full h-64 md:aspect-[4/3] md:h-auto rounded-2xl overflow-hidden gsap-fade-up group shadow-[0_0_30px_rgba(0,102,255,0.15)] border border-dark-border">
                     <img src="images/before-headlights.png" alt="Před renovací" class="absolute inset-0 w-full h-full object-cover">
                     <img src="images/after-headlights.png" alt="Po renovaci" class="after-image absolute inset-0 w-full h-full object-cover" style="clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);">
                     <input type="range" min="0" max="100" value="50" class="slider absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20">
@@ -403,7 +415,7 @@
                 </div>
 
                 <!-- 2. Příklad (Čištění interiéru) -->
-                <div class="slider-container relative w-full aspect-[4/3] rounded-2xl overflow-hidden gsap-fade-up group shadow-[0_0_30px_rgba(0,102,255,0.15)] border border-dark-border" style="transition-delay: 0.1s;">
+                <div class="slider-container relative w-full h-64 md:aspect-[4/3] md:h-auto rounded-2xl overflow-hidden gsap-fade-up group shadow-[0_0_30px_rgba(0,102,255,0.15)] border border-dark-border" style="transition-delay: 0.1s;">
                     <img src="images/before-interior.png" alt="Před" class="absolute inset-0 w-full h-full object-cover">
                     <img src="images/after-interior.png" alt="Po" class="after-image absolute inset-0 w-full h-full object-cover" style="clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);">
                     <input type="range" min="0" max="100" value="50" class="slider absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20">
@@ -723,6 +735,18 @@
                 navbar.classList.remove('shadow-lg');
             }
         });
+
+        // Mobile menu toggle
+        const mobileBtn = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileBtn && mobileMenu) {
+            let menuOpen = false;
+            mobileBtn.addEventListener('click', () => {
+                menuOpen = !menuOpen;
+                mobileMenu.classList.toggle('hidden', !menuOpen);
+                mobileBtn.setAttribute('aria-expanded', String(menuOpen));
+            });
+        }
 
         // Hero Timeline
         const heroTl = gsap.timeline();
